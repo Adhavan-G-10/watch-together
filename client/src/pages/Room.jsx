@@ -42,6 +42,13 @@ function Room() {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [streamError, setStreamError] = useState(false);
   const [showChat, setShowChat] = useState(false); 
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+  const showChatRef = useRef(showChat);
+
+  useEffect(() => {
+    showChatRef.current = showChat;
+    if (showChat) setHasUnreadMessages(false);
+  }, [showChat]);
 
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -126,9 +133,14 @@ function Room() {
       });
 
       socket.on('user-joined', payload => {
-        const peer = addPeer(payload.signal, payload.callerID, stream);
-        peersRef.current.push({ peerID: payload.callerID, peer, username: payload.username });
-        setPeers([...peersRef.current]);
+        const existingPeer = peersRef.current.find(p => p.peerID === payload.callerID);
+        if (existingPeer) {
+          existingPeer.peer.signal(payload.signal);
+        } else {
+          const peer = addPeer(payload.signal, payload.callerID, stream);
+          peersRef.current.push({ peerID: payload.callerID, peer, username: payload.username });
+          setPeers([...peersRef.current]);
+        }
       });
 
       socket.on('receiving-returned-signal', payload => {
@@ -153,6 +165,10 @@ function Room() {
         if (isDuplicate) return prev;
         return [...prev, message];
       });
+      
+      if (message.sender !== user._id && !showChatRef.current) {
+        setHasUnreadMessages(true);
+      }
     });
 
     socket.on('video-url-change', (data) => {
@@ -652,6 +668,9 @@ function Room() {
           className="md:hidden absolute bottom-6 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-xl flex items-center justify-center z-50 hover:scale-105 transition-transform"
         >
           {showChat ? <X size={24} /> : <MessageSquare size={24} />}
+          {!showChat && hasUnreadMessages && (
+            <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 border-2 border-darker rounded-full"></span>
+          )}
         </button>
 
         {/* Right Side: Live Chat (Sidebar) */}
