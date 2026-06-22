@@ -13,7 +13,8 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       // Connect to Socket.io server
-      const newSocket = io(window.location.hostname === 'localhost' ? 'http://localhost:5000' : '/');
+      const serverUrl = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '/');
+      const newSocket = io(serverUrl);
       setSocket(newSocket);
 
       return () => newSocket.close();
