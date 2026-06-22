@@ -10,6 +10,8 @@ import { Users, LogOut, Video, Mic, MicOff, VideoOff, Send, MessageSquare, Monit
 const VideoPeer = ({ peer, username }) => {
   const ref = useRef();
   const [hasVideo, setHasVideo] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
   useEffect(() => {
     // If stream is already available
@@ -50,8 +52,29 @@ const VideoPeer = ({ peer, username }) => {
         </div>
       )}
       <video playsInline autoPlay ref={ref} className={`w-full h-full object-cover relative z-10 ${!hasVideo ? 'opacity-0' : 'opacity-100'}`} />
-      <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 bg-black/60 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-sm backdrop-blur-md font-medium text-white shadow-md z-20">
-        {username}
+      <div 
+        className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 bg-black/60 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-sm backdrop-blur-md font-medium text-white shadow-md z-20 flex items-center gap-2 transition-all cursor-pointer"
+        onMouseEnter={() => setShowVolumeSlider(true)}
+        onMouseLeave={() => setShowVolumeSlider(false)}
+        onClick={() => setShowVolumeSlider(!showVolumeSlider)}
+      >
+        <span>{username}</span>
+        {showVolumeSlider && (
+          <input 
+            type="range" 
+            min="0" 
+            max="1" 
+            step="0.05" 
+            value={volume}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              const val = parseFloat(e.target.value);
+              setVolume(val);
+              if (ref.current) ref.current.volume = val;
+            }} 
+            className="w-16 sm:w-20 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
+          />
+        )}
       </div>
     </div>
   );
@@ -96,6 +119,7 @@ function Room() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showMediaControls, setShowMediaControls] = useState(false);
+  const [youtubeVolume, setYoutubeVolume] = useState(1);
   
   // Refs
   const userVideo = useRef();
@@ -520,7 +544,20 @@ function Room() {
           
           {/* YouTube Sync / Video Player - only show if URL exists */}
           {videoUrl && (
-            <div className="w-full min-h-[320px] md:aspect-auto md:h-auto md:min-h-0 md:flex-1 bg-black rounded-xl sm:rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden shrink-0">
+            <div className="w-full min-h-[320px] md:aspect-auto md:h-auto md:min-h-0 md:flex-1 bg-black rounded-xl sm:rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden shrink-0 group">
+              {/* Custom Volume Control Overlay for Main Video */}
+              <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-20 bg-black/70 px-3 py-2 rounded-lg flex items-center gap-2 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-xs font-medium text-slate-300">Vol:</span>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="1" 
+                  step="0.05" 
+                  value={youtubeVolume} 
+                  onChange={(e) => setYoutubeVolume(parseFloat(e.target.value))} 
+                  className="w-20 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
               <div className="absolute inset-0">
                 <ReactPlayer
                   ref={playerRef}
@@ -528,6 +565,7 @@ function Room() {
                   width="100%"
                   height="100%"
                   playing={playing}
+                  volume={youtubeVolume}
                   controls={true}
                   onPlay={handlePlay}
                   onPause={handlePause}
