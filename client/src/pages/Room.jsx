@@ -165,7 +165,10 @@ function Room() {
     const initRoom = async () => {
       let stream = null;
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'user' }, 
+          audio: true 
+        });
         localStreamRef.current = stream;
         if (userVideo.current) {
           userVideo.current.srcObject = stream;
@@ -545,8 +548,8 @@ function Room() {
           {/* YouTube Sync / Video Player - only show if URL exists */}
           {videoUrl && (
             <div className="w-full min-h-[320px] md:aspect-auto md:h-auto md:min-h-0 md:flex-1 bg-black rounded-xl sm:rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden shrink-0 group">
-              {/* Custom Volume Control Overlay for Main Video */}
-              <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-20 bg-black/70 px-3 py-2 rounded-lg flex items-center gap-2 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Custom Volume Control Overlay for Main Video - Always visible on mobile */}
+              <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-20 bg-black/70 px-3 py-2 rounded-lg flex items-center gap-2 backdrop-blur-md transition-opacity">
                 <span className="text-xs font-medium text-slate-300">Vol:</span>
                 <input 
                   type="range" 
@@ -555,7 +558,7 @@ function Room() {
                   step="0.05" 
                   value={youtubeVolume} 
                   onChange={(e) => setYoutubeVolume(parseFloat(e.target.value))} 
-                  className="w-20 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
+                  className="w-16 sm:w-20 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer"
                 />
               </div>
               <div className="absolute inset-0">
