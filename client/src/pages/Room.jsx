@@ -9,28 +9,48 @@ import { Users, LogOut, Video, Mic, MicOff, VideoOff, Send, MessageSquare, Monit
 
 const VideoPeer = ({ peer, username }) => {
   const ref = useRef();
+  const [hasVideo, setHasVideo] = useState(false);
 
   useEffect(() => {
-    // If stream is already available before listener is attached
+    // If stream is already available
     if (peer.streams && peer.streams[0] && ref.current) {
       ref.current.srcObject = peer.streams[0];
+      setHasVideo(true);
     }
 
     const handleStream = stream => {
-      if (ref.current) ref.current.srcObject = stream;
+      if (ref.current) {
+        ref.current.srcObject = stream;
+        setHasVideo(true);
+      }
+    };
+
+    const handleTrack = (track, stream) => {
+      if (ref.current) {
+        ref.current.srcObject = stream;
+        setHasVideo(true);
+      }
     };
 
     peer.on('stream', handleStream);
+    peer.on('track', handleTrack);
 
     return () => {
       peer.off('stream', handleStream);
+      peer.off('track', handleTrack);
     };
   }, [peer]);
 
   return (
     <div className="w-full h-full bg-slate-800 rounded-xl flex items-center justify-center relative overflow-hidden group shadow-lg border border-white/10">
-      <video playsInline autoPlay ref={ref} className="w-full h-full object-cover" />
-      <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 bg-black/60 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-sm backdrop-blur-md font-medium text-white shadow-md">
+      {!hasVideo && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-900 z-0">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+          <span className="text-xs font-medium">Connecting video...</span>
+        </div>
+      )}
+      <video playsInline autoPlay ref={ref} className={`w-full h-full object-cover relative z-10 ${!hasVideo ? 'opacity-0' : 'opacity-100'}`} />
+      <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 bg-black/60 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-sm backdrop-blur-md font-medium text-white shadow-md z-20">
         {username}
       </div>
     </div>
