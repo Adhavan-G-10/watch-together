@@ -7,9 +7,9 @@ import { useAuth } from './context/AuthContext';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
-  
+
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  
+
   return user ? children : <Navigate to="/login" />;
 }
 
@@ -20,21 +20,21 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route 
-            path="/" 
+          <Route
+            path="/"
             element={
               <PrivateRoute>
                 <Home />
               </PrivateRoute>
-            } 
+            }
           />
-          <Route 
-            path="/room/:roomId" 
+          <Route
+            path="/room/:roomId"
             element={
               <PrivateRoute>
                 <Room />
               </PrivateRoute>
-            } 
+            }
           />
         </Routes>
       </div>

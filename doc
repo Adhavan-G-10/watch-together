@@ -1,0 +1,113 @@
+Watch Together - MERN Stack Project Requirements Document
+
+Project Name:
+Watch Together
+
+Project Goal:
+Two users should be able to join the same room, talk through video call, and watch the same video together in sync.
+
+Technology Stack:
+Frontend: React (Vite) + Tailwind CSS
+Backend: Node.js + Express.js
+Database: MongoDB
+Real-time Communication: Socket.IO
+Video Calling: WebRTC
+Authentication: JWT
+Cloud Storage: Cloudinary
+
+Core Features:
+
+1. Authentication
+- User Registration
+- User Login
+- JWT Authentication
+- User Profile
+
+2. Room System
+- Create Room
+- Join Room using Room Code
+- Leave Room
+- Display connected users
+
+3. Video Call
+- One-to-one video call using WebRTC
+- Camera On/Off
+- Microphone Mute/Unmute
+- End Call
+
+4. Screen Sharing
+- Share screen during the call
+- Share browser tab or entire screen
+- Stop screen sharing
+
+5. YouTube Watch Party
+- Host can paste a YouTube URL
+- All users automatically load the same video
+- Play, Pause and Seek must stay synchronized using Socket.IO
+- New users joining should start at the current timestamp
+
+6. Cloud Video Upload
+- Host can upload a local video file
+- Upload video to Cloudinary
+- Save Cloudinary URL
+- Stream the uploaded video to all room members
+- Show upload progress
+
+7. Video Synchronization
+- Host controls playback
+- When host plays the video, everyone sees play
+- When host pauses the video, everyone sees pause
+- When host seeks to another timestamp, everyone jumps to that timestamp
+- Synchronization should use Socket.IO
+
+8. Live Chat
+- Real-time chat inside the room
+- Show sender name and timestamp
+- Emoji support
+
+9. Watch History
+- Store watched videos
+- Store room history
+- Allow users to see previous sessions
+
+Database Collections:
+users
+rooms
+videos
+messages
+watchHistory
+
+Suggested Development Order:
+1. Authentication
+2. Room System
+3. Socket.IO Setup
+4. WebRTC Video Call
+5. Chat
+6. Screen Sharing
+7. YouTube Watch Party
+8. Cloudinary Upload
+9. Video Synchronization
+10. Watch History
+
+Minimum Viable Product (MVP):
+- Login/Register
+- Create Room
+- Join Room
+- One-to-one Video Call
+- Chat
+- Screen Sharing
+
+Final Version:
+- YouTube Watch Party
+- Cloud Video Upload
+- Video Synchronization
+- Watch History
+- Improved UI/UX
+
+Important Notes:
+- Use Cloudinary for uploaded videos.
+- Use Socket.IO for all real-time synchronization.
+- Use WebRTC for video calling and screen sharing.
+- The UI should be responsive for desktop and mobile devices.
+
+

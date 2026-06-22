@@ -11,9 +11,20 @@ const VideoPeer = ({ peer, username }) => {
   const ref = useRef();
 
   useEffect(() => {
-    peer.on('stream', stream => {
+    // If stream is already available before listener is attached
+    if (peer.streams && peer.streams[0] && ref.current) {
+      ref.current.srcObject = peer.streams[0];
+    }
+
+    const handleStream = stream => {
       if (ref.current) ref.current.srcObject = stream;
-    });
+    };
+
+    peer.on('stream', handleStream);
+
+    return () => {
+      peer.off('stream', handleStream);
+    };
   }, [peer]);
 
   return (
