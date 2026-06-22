@@ -560,7 +560,14 @@ function Room() {
                 </div>
               ) : (
                 <>
-                  <video muted ref={userVideo} autoPlay playsInline className={`w-full h-full object-cover ${!isScreenSharing ? '-scale-x-100' : ''} ${!isVideoOn && !isScreenSharing ? 'hidden' : ''}`} />
+                  <video 
+                    muted 
+                    ref={userVideo} 
+                    autoPlay 
+                    playsInline 
+                    className={`w-full h-full object-cover ${!isVideoOn && !isScreenSharing ? 'hidden' : ''}`}
+                    style={!isScreenSharing ? { transform: 'scaleX(-1)' } : {}}
+                  />
                   {!isVideoOn && !isScreenSharing && (
                     <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
                       <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-primary flex items-center justify-center text-2xl sm:text-4xl font-bold text-white">
