@@ -87,6 +87,11 @@ io.on('connection', (socket) => {
       socket.to(roomId).emit('video-seek', time);
     });
 
+    // Sync currently playing video to a newly joined user
+    socket.on('sync-video-to-new-user', (data) => {
+      io.to(data.targetSocketId).emit('sync-video', data);
+    });
+
     socket.on('disconnect', () => {
       console.log('User disconnected from room:', socket.id);
       socket.to(roomId).emit('user-disconnected', { userId, username, socketId: socket.id });

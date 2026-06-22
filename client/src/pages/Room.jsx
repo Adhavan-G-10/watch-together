@@ -90,18 +90,39 @@ function Room() {
     };
     fetchMessages();
 
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-      localStreamRef.current = stream;
-      if (userVideo.current) {
-        userVideo.current.srcObject = stream;
+    const initRoom = async () => {
+      let stream = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localStreamRef.current = stream;
+        if (userVideo.current) {
+          userVideo.current.srcObject = stream;
+        }
+      } catch (err) {
+        console.error("Could not get media stream", err);
+        setStreamError(true);
+        // Create an empty stream to avoid breaking WebRTC peer logic
+        stream = new MediaStream();
+        localStreamRef.current = stream;
       }
-      
+
       socket.emit('join-room', { roomId, userId: user._id, username: user.username });
 
       socket.on('user-connected', ({ socketId, username }) => {
         const peer = createPeer(socketId, socket.id, stream, user.username);
         peersRef.current.push({ peerID: socketId, peer, username });
         setPeers([...peersRef.current]);
+
+        // If we are watching a video, tell the new user about it
+        if (videoUrl) {
+          socket.emit('sync-video-to-new-user', {
+            targetSocketId: socketId,
+            url: videoUrl,
+            name: videoName,
+            time: playerRef.current ? playerRef.current.getCurrentTime() : 0,
+            playing
+          });
+        }
       });
 
       socket.on('user-joined', payload => {
@@ -121,11 +142,9 @@ function Room() {
         peersRef.current = peersRef.current.filter(p => p.peerID !== socketId);
         setPeers([...peersRef.current]);
       });
+    };
 
-    }).catch(err => {
-      console.error("Could not get media stream", err);
-      setStreamError(true);
-    });
+    initRoom();
 
     socket.on('receive-message', (message) => {
       setMessages(prev => {
@@ -165,6 +184,26 @@ function Room() {
       setTimeout(() => isSyncing.current = false, 500);
     });
 
+    socket.on('sync-video', (data) => {
+      if (!videoUrl) { // Only sync if we don't already have a video playing
+        setVideoUrl(data.url);
+        setVideoName(data.name);
+        setPlaying(data.playing);
+        hasSeekedInitial.current = false; // reset this so it can seek
+        // Force player to seek when ready using initialTimestamp state logic
+        // We can just rely on the onReady handler for initial seek by temporarily modifying url params or direct seek
+        if (playerRef.current) {
+          playerRef.current.seekTo(data.time, 'seconds');
+        } else {
+          // If player isn't rendered yet, we can cheat by relying on it to play from start, 
+          // or we can wait for ready. Since we don't want to overcomplicate, we'll seek after a tiny delay
+          setTimeout(() => {
+            if (playerRef.current) playerRef.current.seekTo(data.time, 'seconds');
+          }, 1000);
+        }
+      }
+    });
+
     return () => {
       socket.off('user-connected');
       socket.off('user-joined');
@@ -175,6 +214,7 @@ function Room() {
       socket.off('video-play');
       socket.off('video-pause');
       socket.off('video-seek');
+      socket.off('sync-video');
       
       if (localStreamRef.current) localStreamRef.current.getTracks().forEach(track => track.stop());
       if (screenTrackRef.current) screenTrackRef.current.stop();
@@ -206,13 +246,13 @@ function Room() {
   };
 
   function createPeer(userToSignal, callerID, stream, username) {
-    const peer = new Peer({ initiator: true, trickle: false, stream, config: iceServers });
+    const peer = new Peer({ initiator: true, trickle: true, stream, config: iceServers });
     peer.on('signal', signal => socket.emit('sending-signal', { userToSignal, callerID, signal, username }));
     return peer;
   }
 
   function addPeer(incomingSignal, callerID, stream) {
-    const peer = new Peer({ initiator: false, trickle: false, stream, config: iceServers });
+    const peer = new Peer({ initiator: false, trickle: true, stream, config: iceServers });
     peer.on('signal', signal => socket.emit('returning-signal', { signal, callerID }));
     peer.signal(incomingSignal);
     return peer;
