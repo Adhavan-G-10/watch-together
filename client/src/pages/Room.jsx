@@ -79,7 +79,17 @@ function Room() {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' }
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { 
+        urls: 'turn:openrelay.metered.ca:80',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      { 
+        urls: 'turn:openrelay.metered.ca:443',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      }
     ] 
   };
 
@@ -232,6 +242,10 @@ function Room() {
       socket.off('video-seek');
       socket.off('sync-video');
       
+      peersRef.current.forEach(p => p.peer.destroy());
+      peersRef.current = [];
+      setPeers([]);
+
       if (localStreamRef.current) localStreamRef.current.getTracks().forEach(track => track.stop());
       if (screenTrackRef.current) screenTrackRef.current.stop();
     };
